@@ -49,12 +49,16 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
+// app.use(cors({
+//     credentials: true,
+//     origin: process.env.CLIENT_URL
+// }))
 app.use(cors({
     credentials: true,
-    origin: [process.env.CLIENT_URL,"https://mern-chat-app.onrender.com"]
+    origin: 'https://chat-back-r65u.onrender.com',
 }))
 
-app.get('/test', (req, res) => { 
+app.get('/test', (req, res) => {
     res.json('test ok');
 });
 console.log("Hello ji I am a Index.js file in api folder");
@@ -130,6 +134,8 @@ app.get('/people', async (req, res) => {
 // create profile 
 app.get('/profile', (req, res) => {
     const token = req.cookies?.token;
+    console.log("this is token");
+    console.log(token);
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
             if (err) throw err;
@@ -170,6 +176,8 @@ app.post('/login', async (req, res) => {
         } else {
             res.status(404).json({ message: 'User not found' });
         }
+
+        console.log("user login");
     }
     catch (err) {
         console.error(err);
@@ -231,7 +239,7 @@ wss.on('connection', (connection, req) => {
                 online: [...wss.clients]
                     .map(c => ({ userId: c.userId, username: c.username })),
             }));
-        }
+        } 
         )
     }
 
