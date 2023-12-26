@@ -52,7 +52,7 @@ app.use(cookieParser());
 app.use(cors({
     credentials: true,
     // origin: [process.env.CLIENT_URL,'https://chat-back-r65u.onrender.com']
-    origin: process.env.CLIENT_URL
+    origin: process.env.CLIENT_URL 
 }))
 
 
