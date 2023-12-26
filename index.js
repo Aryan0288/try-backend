@@ -49,14 +49,17 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use(cors({
-//     credentials: true,
-//     origin: process.env.CLIENT_URL
-// }))
 app.use(cors({
     credentials: true,
-    origin: 'https://chat-back-r65u.onrender.com',
+    // origin: [process.env.CLIENT_URL,'https://chat-back-r65u.onrender.com']
+    origin: process.env.CLIENT_URL
 }))
+
+
+// app.use(cors({
+//     credentials: true,
+//     origin: 'https://chat-back-r65u.onrender.com',
+// }))
 
 app.get('/test', (req, res) => {
     res.json('test ok');
@@ -65,6 +68,7 @@ console.log("Hello ji I am a Index.js file in api folder");
 
 async function getUserDataFromRequest(req) {
     return new Promise((resolve, reject) => {
+        console.log("User send Message");
         const token = req.cookies?.token;
         if (token) {
             jwt.verify(token, jwtSecret, {}, (err, userData) => {
@@ -75,6 +79,7 @@ async function getUserDataFromRequest(req) {
         else {
             reject('no token');
         }
+
     })
 }
 
@@ -185,7 +190,7 @@ app.post('/login', async (req, res) => {
     }
 })
 
-app.post('/logout', (req, res) => {
+app.post('/logout', (req, res) => { 
     res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
 })
 
@@ -226,8 +231,9 @@ app.post('/register', async (req, res) => {
 
 })
 
+const PORT=process.env.PORT || 4040
 
-const server = app.listen(4040);
+const server = app.listen(PORT);
 
 
 const wss = new ws.WebSocketServer({ server });
@@ -235,7 +241,7 @@ wss.on('connection', (connection, req) => {
 
     function notifyAboutOnlinePeople() {
         [...wss.clients].forEach(client => {
-            client.send(JSON.stringify({
+            client.send(JSON.stringify({  
                 online: [...wss.clients]
                     .map(c => ({ userId: c.userId, username: c.username })),
             }));
