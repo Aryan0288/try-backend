@@ -51,8 +51,7 @@ app.use(cookieParser());
 
 app.use(cors({
     credentials: true,
-    // origin: [process.env.CLIENT_URL,'https://chat-back-r65u.onrender.com']
-    origin: process.env.CLIENT_URL 
+    origin: process.env.CLIENT_URL
 }))
 
 
@@ -68,7 +67,7 @@ console.log("Hello ji I am a Index.js file in api folder");
 
 async function getUserDataFromRequest(req) {
     return new Promise((resolve, reject) => {
-        console.log("User send Message");
+        console.log("User send Message");  
         const token = req.cookies?.token;
         if (token) {
             jwt.verify(token, jwtSecret, {}, (err, userData) => {
