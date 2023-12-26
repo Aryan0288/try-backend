@@ -51,7 +51,7 @@ app.use(cookieParser());
 
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL
+    origin: process.env.CLIENT_URL || "http://localhost:5173"
 }))
 
 
@@ -151,6 +151,7 @@ app.get('/profile', (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
+    console.log("I am in the login ");
     const { username, password } = req.body;
 
     try {
