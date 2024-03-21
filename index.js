@@ -5,10 +5,10 @@ const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const ws = require('ws');
-const fs = require('fs');
-
-const Message = require('./models/Message');
+const ws = require('ws'); 
+const fs = require('fs'); 
+ 
+const Message = require('./models/Message'); 
 const User = require('./models/User');
 const MONGO_URL = 'mongodb+srv://chatapp:dpJbj0tFUrqVcQU6@cluster0.ttefoc8.mongodb.net/?retryWrites=true&w=majority';
 
@@ -259,8 +259,8 @@ wss.on('connection', (connection, req) => {
             clearInterval(connection.timer);
             connection.terminate();
             notifyAboutOnlinePeople();
-            console.log('continue-1');
-            console.log('continue-2');
+            // console.log('continue-1');
+            // console.log('continue-2');
         }, 1000);
     }, 5000);
 
@@ -273,12 +273,13 @@ wss.on('connection', (connection, req) => {
     const cookies = req.headers.cookie;
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
+        console.log("cookies is here: ",tokenCookieString); 
         if (tokenCookieString) {
             const token = tokenCookieString.split('=')[1];
             if (token) {
                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
                     if (err) throw err;
-
+                    console.log("User data : ",UserData);
                     const { userId, username } = UserData;
 
                     try {
@@ -331,6 +332,8 @@ wss.on('connection', (connection, req) => {
                 file: file ? file.name : null,
             });
 
+            console.log("reciept ",recipient);
+            console.log("userId ",connection.userId);
             [...wss.clients]
                 .filter(c => c.userId === recipient)
                 .forEach(c => c.send(JSON.stringify({
