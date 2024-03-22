@@ -5,10 +5,10 @@ const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const ws = require('ws'); 
-const fs = require('fs'); 
- 
-const Message = require('./models/Message'); 
+const ws = require('ws');
+const fs = require('fs');
+
+const Message = require('./models/Message');
 const User = require('./models/User');
 const MONGO_URL = 'mongodb+srv://chatapp:dpJbj0tFUrqVcQU6@cluster0.ttefoc8.mongodb.net/?retryWrites=true&w=majority';
 
@@ -67,7 +67,7 @@ console.log("Hello ji I am a Index.js file in api folder");
 
 async function getUserDataFromRequest(req) {
     return new Promise((resolve, reject) => {
-        console.log("User send Message");  
+        console.log("User send Message");
         const token = req.cookies?.token;
         if (token) {
             jwt.verify(token, jwtSecret, {}, (err, userData) => {
@@ -76,24 +76,28 @@ async function getUserDataFromRequest(req) {
             });
         }
         else {
-            reject('no token');
+            return res.status(501).json({status:false,message:reject});
         }
 
     })
 }
 
-app.get("/", async (req,res)=>{
+app.get("/", async (req, res) => {
     console.log("i am in /");
-    const data=await User.find({});
-    res.json({success:true,data:data});
+    const data = await User.find({});
+    res.json({ success: true, data: data });
     // res.json("hello");
 })
 
 app.get('/messages/:userId', async (req, res) => {
     const { userId } = req.params;
+    // console.log("userId : ",userId);
     const userData = await getUserDataFromRequest(req);
-    const ourUserId = userData.userId;
-  
+    const ourUserId = userData.id;
+
+    // console.log("userData message: ",userData);
+    // console.log("ourUserId message: ",ourUserId);
+
     const messages = await Message.find({
         sender: { $in: [userId, ourUserId] },
         recipient: { $in: [userId, ourUserId] },
@@ -104,12 +108,12 @@ app.get('/messages/:userId', async (req, res) => {
 
 app.delete('/messages/:id', async (req, res) => {
     const messageId = req.params.id;
-    console.log("id : " + messageId);  
+    console.log("id : " + messageId);
 
     // const data=await Message.findByIdAndDelete({_id:messageId});
     // res.send({success:true,message:"data delete succesfully",data:data});
-    
-    
+
+
     try {
         // Find the message by ID and remove it
         //   const deletedMessage = await Message.findByIdAndRemove(messageId);
@@ -127,8 +131,8 @@ app.delete('/messages/:id', async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}); 
- 
+});
+
 
 app.get('/people', async (req, res) => {
     const users = await User.find({}, { '_id': 1, username: 1 });
@@ -138,15 +142,38 @@ app.get('/people', async (req, res) => {
 // create profile 
 app.get('/profile', (req, res) => {
     const token = req.cookies?.token;
-    console.log("this is token");
-    console.log(token);
+    // console.log("this is token");
+    // console.log(token);
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
             if (err) throw err;
-            res.json(userData);
+            // console.log("user data in profile : ",userData);
+            res.json(userData); 
         });
     } else {
         res.status(401).json('no token');
+    }
+})
+
+app.post('/verify', async (req, res) => {
+    try {
+        const email = req.body.email;
+        await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
+        return res.status(201).json({ success: true });
+    } catch (err) {
+        console.log("Error occurred in /verify POST:", err.message);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+});
+
+app.post("/notverifyDeleted",async(req,res)=>{
+    try{
+        console.log("delete succesfully non verified account");
+        await User.deleteMany({status:false});
+        res.status(201).json({success:true,message:"succesfully delted non verified account"});
+    }catch(err){
+        console.log("error occur non verified account");
+        return;
     }
 })
 
@@ -157,42 +184,55 @@ app.post('/login', async (req, res) => {
     try {
         // const foundUser = await User.findOne({ $or: [{ username }, { email: username }] });
         let foundUser;
-        // Check if the entered username is an email address
-        if (username.includes('@')) {
-            foundUser = await User.findOne({ email: username });
-        } else {
-            foundUser = await User.findOne({ username });
+        foundUser = await User.findOne({ email: username });
+
+        if(!foundUser.status){
+            console.log("user not verify");
+            return res.status(301).json({success:false,message:"User NotFound!"});
         }
 
         if (foundUser) {
+
             const passOk = bcrypt.compareSync(password, foundUser.password);
             if (passOk) {
-                jwt.sign({ userId: foundUser._id, username, email: foundUser.email }, jwtSecret, {}, (err, token) => {
-                    res.cookie('token', token, { sameSite: 'none', secure: true }).json({
-                        id: foundUser._id,
-                        username,
-                        email: foundUser.email,
-                    });
+
+                const payload={
+                    email:foundUser.email,
+                    id:foundUser._id,
+                    username:foundUser.username,
+                }
+
+                const token=jwt.sign(payload,jwtSecret,{expiresIn:'1D'});
+                const options={
+                    expiresIn:"1D",
+                    httpOnly:true,
+                }
+                res.cookie('token',token,options).status(201).json({
+                    success:true,
+                    token:token,
+                    foundUser,
+                    message:`${foundUser.username} Login Successful`,
                 })
-                // console.log("the username is "+foundUser.username);
             } else {
-                res.status(401).json({ message: 'Invalid password' });
+               return res.status(401).json({ message: 'Invalid password' });
             }
+           
         } else {
-            res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        console.log("user login");
     }
     catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.error("error during login : ",err.message);
+        res.status(500).json({success:false, message: 'Internal Server Error' });
     }
 })
 
-app.post('/logout', (req, res) => { 
+app.post('/logout', (req, res) => {
     res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
 })
+
+const sendMail = require('./connection/sendMail.js');
 
 app.post('/register', async (req, res) => {
     console.log("I am inside register");
@@ -206,23 +246,26 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Email already registered' });
         }
 
+        console.log(username + " " + email + " " + password);
         const hashPassword = bcrypt.hashSync(password, bcryptSalt);
         const createdUser = await User.create({
             username: username,
             password: hashPassword,
             email: email,
         });
-        jwt.sign({ userId: createdUser._id }, jwtSecret, {}, (err, token) => {
-            if (err) {
-                throw err;
-            }
-            res.cookie('token', token, { sameSite: 'none', secure: true }).status(201).json({
-                _id: createdUser._id,
-                email,
-            });
-        });
-
-        console.log("User Created");
+        const otp = Math.floor(1000 + Math.random() * 900000);
+        await sendMail(email, "Account verification Email", otp);
+        // jwt.sign({ userId: createdUser._id }, jwtSecret, {}, (err, token) => {
+        //     if (err) {
+        //         throw err;
+        //     }
+        //     res.cookie('token', token, { sameSite: 'none', secure: true }).status(201).json({
+        //         _id: createdUser._id,
+        //         email,
+        //     });
+        // });
+        console.log("otp: ", otp);
+        res.status(201).json({ success: true, message: "User created successfully", otp: otp });
 
     } catch (err) {
         if (err) throw err;
@@ -231,7 +274,7 @@ app.post('/register', async (req, res) => {
 
 })
 
-const PORT=process.env.PORT || 4040
+const PORT = process.env.PORT || 4040
 
 const server = app.listen(PORT);
 
@@ -241,11 +284,11 @@ wss.on('connection', (connection, req) => {
 
     function notifyAboutOnlinePeople() {
         [...wss.clients].forEach(client => {
-            client.send(JSON.stringify({  
+            client.send(JSON.stringify({
                 online: [...wss.clients]
                     .map(c => ({ userId: c.userId, username: c.username })),
             }));
-        } 
+        }
         )
     }
 
@@ -273,19 +316,21 @@ wss.on('connection', (connection, req) => {
     const cookies = req.headers.cookie;
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
-        console.log("cookies is here: ",tokenCookieString); 
+        
         if (tokenCookieString) {
             const token = tokenCookieString.split('=')[1];
             if (token) {
                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
                     if (err) throw err;
-                    console.log("User data : ",UserData);
-                    const { userId, username } = UserData;
+                    // console.log("cookies is here: ",token);
+                    const { id, username } = UserData;
+                    // console.log("User data userId : ",id);
+                    // console.log("User data username : ",username);
 
                     try {
-                        const user = await User.findById(userId);
+                        const user = await User.findById(id);
                         if (user) {
-                            connection.userId = userId;
+                            connection.userId = id;
                             connection.username = user.username; // Use the actual username from the database
                             // console.log("The username is " + user.username);
                         }
@@ -316,10 +361,10 @@ wss.on('connection', (connection, req) => {
             let d = new Date();
 
             fs.writeFile(path, bufferData, () => {
-                console.log("file saved : " + path);
+                // console.log("file saved : " + path);
                 // console.log("New Date : " + d.getDate() + "/" + d.getDay() + "/" + d.getFullYear());
-                console.log("time " + d.getTime());
-                console.log(file.name);
+                // console.log("time " + d.getTime());
+                // console.log(file.name);
                 // console.log("bufferData = "+ file.data);
             })
         }
@@ -332,8 +377,8 @@ wss.on('connection', (connection, req) => {
                 file: file ? file.name : null,
             });
 
-            console.log("reciept ",recipient);
-            console.log("userId ",connection.userId);
+            // console.log("reciept ",recipient);
+            // console.log("userId ",connection.userId);
             [...wss.clients]
                 .filter(c => c.userId === recipient)
                 .forEach(c => c.send(JSON.stringify({
