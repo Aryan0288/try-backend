@@ -65,22 +65,37 @@ app.get('/test', (req, res) => {
 });
 console.log("Hello ji I am a Index.js file in api folder");
 
+// async function getUserDataFromRequest(req) {
+//     return new Promise((resolve, reject) => {
+//         // console.log("User send Message");
+//         const token = req.cookies?.token;
+//         if (token) {
+//             jwt.verify(token, jwtSecret, {}, (err, userData) => {
+//                 if (err) throw err;
+//                 resolve(userData);
+//             });
+//         }
+//         else {
+//             return res.status(501).json({status:false,message:reject});
+//         }
+
+//     })
+// }
+
 async function getUserDataFromRequest(req) {
-    return new Promise((resolve, reject) => {
-        console.log("User send Message");
+    try {
         const token = req.cookies?.token;
         if (token) {
-            jwt.verify(token, jwtSecret, {}, (err, userData) => {
-                if (err) throw err;
-                resolve(userData);
-            });
+            const userData = jwt.verify(token, jwtSecret, {});
+            return userData;
+        } else {
+            return new Error('Token not found');
         }
-        else {
-            return res.status(501).json({status:false,message:reject});
-        }
-
-    })
+    } catch (error) {
+        return { status: false, message: error.message }; // Assuming you're handling the response in the caller
+    }
 }
+
 
 app.get("/", async (req, res) => {
     console.log("i am in /");
