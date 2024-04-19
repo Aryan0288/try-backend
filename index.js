@@ -221,10 +221,16 @@ app.post('/login', async (req, res) => {
                 const options = {
                     expiresIn: "1D",
                     httpOnly: true,
-                    sameSite: "None",
+                    SameSite: None,
                     secure: true,
                 }
-                res.cookie('token', token, options).status(201).json({
+                // res.cookie('token', token, options).status(201).json({
+                //     success: true,
+                //     token: token,
+                //     foundUser,
+                //     message: `${foundUser.username} Login Successful`,
+                // })
+                res.header('token', token, options).status(201).json({
                     success: true,
                     token: token,
                     foundUser,
@@ -250,6 +256,7 @@ app.post('/logout', (req, res) => {
 })
 
 const sendMail = require('./connection/sendMail.js');
+const { NONAME } = require('dns');
 
 app.post('/register', async (req, res) => {
     console.log("I am inside register");
