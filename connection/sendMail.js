@@ -16,14 +16,11 @@ const transporter = nodemailer.createTransport({
 const sendmail = async (to, subject, msg) => {
     try {
         await transporter.sendMail({
-            from: 'twiter verification message',
+            from: 'One time password OTP for account registration(CHATHUB)',
             to: to,
             subject: subject,
             text: 'verification email',
-            html: `<h1 style=\"background-color:yellow; font-size:25px"\>${msg}
-                    click below to verify your email </h1>
-                    <a href=\"http://localhost:8080/verifyemail?email=${to}"\>click here</a>
-                    `
+            html: `<h1>EMAIL OTP : ${msg} </h1>`
         });
         console.log('Email sent successfully');
     } catch (error) {

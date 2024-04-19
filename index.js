@@ -157,16 +157,15 @@ app.get('/people', async (req, res) => {
 // create profile 
 app.get('/profile', (req, res) => {
     const token = req.cookies?.token;
-    // console.log("this is token");
-    // console.log(token);
+    
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
             if (err) throw err;
             // console.log("user data in profile : ",userData);
-            res.json(userData); 
+            return res.json(userData); 
         });
     } else {
-        res.status(401).json('no token');
+        return res.status(401).json('no token');
     }
 })
 
@@ -181,11 +180,11 @@ app.post('/verify', async (req, res) => {
     }
 });
 
-app.post("/notverifyDeleted",async(req,res)=>{
+app.delete("/notverifyDeleted",async(req,res)=>{
     try{
         console.log("delete succesfully non verified account");
         await User.deleteMany({status:false});
-        res.status(201).json({success:true,message:"succesfully delted non verified account"});
+        return res.status(201).json({success:true,message:"deleted"});
     }catch(err){
         console.log("error occur non verified account");
         return;
@@ -193,17 +192,20 @@ app.post("/notverifyDeleted",async(req,res)=>{
 })
 
 app.post('/login', async (req, res) => {
-    console.log("I am in the login ");
     const { username, password } = req.body;
+    // console.log("I am in the login ",username,password);
 
     try {
-        // const foundUser = await User.findOne({ $or: [{ username }, { email: username }] });
         let foundUser;
         foundUser = await User.findOne({ email: username });
-
+        // console.log(foundUser);
+        if(foundUser===null){
+            console.log("User not found")
+            return res.status(404).json({message:"User NotFound!"});
+        }
         if(!foundUser.status){
             console.log("user not verify");
-            return res.status(301).json({success:false,message:"User NotFound!"});
+            return res.status(404).json({success:false,message:"User NotFound!"});
         }
 
         if (foundUser) {
@@ -233,7 +235,7 @@ app.post('/login', async (req, res) => {
             }
            
         } else {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User NotFound!' });
         }
 
     }
@@ -244,7 +246,7 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/logout', (req, res) => {
-    res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
+    return res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
 })
 
 const sendMail = require('./connection/sendMail.js');
@@ -255,7 +257,7 @@ app.post('/register', async (req, res) => {
     try {
         // Check if the email already exists
         const existingUser = await User.findOne({ email });
-
+ 
         if (existingUser) {
             // Email already registered
             return res.status(400).json({ message: 'Email already registered' });
@@ -269,16 +271,7 @@ app.post('/register', async (req, res) => {
             email: email,
         });
         const otp = Math.floor(1000 + Math.random() * 900000);
-        await sendMail(email, "Account verification Email", otp);
-        // jwt.sign({ userId: createdUser._id }, jwtSecret, {}, (err, token) => {
-        //     if (err) {
-        //         throw err;
-        //     }
-        //     res.cookie('token', token, { sameSite: 'none', secure: true }).status(201).json({
-        //         _id: createdUser._id,
-        //         email,
-        //     });
-        // });
+        await sendMail(email, "Hello "+username+" Account verification Email", otp);
         console.log("otp: ", otp);
         res.status(201).json({ success: true, message: "User created successfully", otp: otp });
 
@@ -394,6 +387,12 @@ wss.on('connection', (connection, req) => {
 
             // console.log("reciept ",recipient);
             // console.log("userId ",connection.userId);
+            [...wss.clients]
+                .filter(c=> c.userId===recipient)
+                .forEach(e=>console.log("forEach: ",e.userId,e.username));
+            
+            console.log("reciept: ", recipient);
+
             [...wss.clients]
                 .filter(c => c.userId === recipient)
                 .forEach(c => c.send(JSON.stringify({
