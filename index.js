@@ -283,7 +283,7 @@ app.post('/register', async (req, res) => {
 })
 
 const PORT = process.env.PORT || 4040
-
+console.log("Port: ",PORT)
 const server = app.listen(PORT);
 
 
