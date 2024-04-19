@@ -49,10 +49,11 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-}))
+// app.use(cors({
+//     origin: "http://localhost:5173",
+//     credentials: true,
+// }))
+app.use(cors());
 
 
 // app.use(cors({
@@ -157,6 +158,7 @@ app.get('/people', async (req, res) => {
 // create profile 
 app.get('/profile', (req, res) => {
     const token = req.cookies?.token;
+    console.log("token: ",token);
     
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
