@@ -50,7 +50,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin: "https://aryan-chathub.vercel.app",
+    origin: "https://chat-front-git-master-aryans-projects-69401cf6.vercel.app",
     credentials: true,
 }))
 // app.use(cors());
@@ -221,7 +221,7 @@ app.post('/login', async (req, res) => {
                 const options = {
                     expiresIn: "1D",
                     httpOnly: true,
-                    sameSite: "Lax",
+                    sameSite: "None",
                     secure: true, 
                 }
                 res.cookie('token', token, options).status(201).json({
