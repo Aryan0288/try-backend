@@ -221,6 +221,8 @@ app.post('/login', async (req, res) => {
                 const options={
                     expiresIn:"1D",
                     httpOnly:true,
+                    sameSite:"None",
+                    secure:true,
                 }
                 res.cookie('token',token,options).status(201).json({
                     success:true,
