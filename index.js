@@ -49,17 +49,13 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use(cors({
-//     origin: "http://localhost:5173",
-//     credentials: true,
-// }))
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}))
+// app.use(cors());
 
 
-// app.use(cors({
-//     credentials: true,
-//     origin: 'https://chat-back-r65u.onrender.com',
-// }))
 
 app.get('/test', (req, res) => {
     res.json('test ok');
