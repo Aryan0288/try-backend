@@ -154,13 +154,13 @@ app.get('/people', async (req, res) => {
 // create profile 
 app.get('/profile', (req, res) => {
     const token = req.cookies?.token;
-    console.log("token: ",token);
-    
+    console.log("token: ", token);
+
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
             if (err) throw err;
             // console.log("user data in profile : ",userData);
-            return res.json(userData); 
+            return res.json(userData);
         });
     } else {
         return res.status(401).json('no token');
@@ -178,12 +178,12 @@ app.post('/verify', async (req, res) => {
     }
 });
 
-app.delete("/notverifyDeleted",async(req,res)=>{
-    try{
+app.delete("/notverifyDeleted", async (req, res) => {
+    try {
         console.log("delete succesfully non verified account");
-        await User.deleteMany({status:false});
-        return res.status(201).json({success:true,message:"deleted"});
-    }catch(err){
+        await User.deleteMany({ status: false });
+        return res.status(201).json({ success: true, message: "deleted" });
+    } catch (err) {
         console.log("error occur non verified account");
         return;
     }
@@ -197,13 +197,13 @@ app.post('/login', async (req, res) => {
         let foundUser;
         foundUser = await User.findOne({ email: username });
         // console.log(foundUser);
-        if(foundUser===null){
+        if (foundUser === null) {
             console.log("User not found")
-            return res.status(404).json({message:"User NotFound!"});
+            return res.status(404).json({ message: "User NotFound!" });
         }
-        if(!foundUser.status){
+        if (!foundUser.status) {
             console.log("user not verify");
-            return res.status(404).json({success:false,message:"User NotFound!"});
+            return res.status(404).json({ success: false, message: "User NotFound!" });
         }
 
         if (foundUser) {
@@ -211,37 +211,37 @@ app.post('/login', async (req, res) => {
             const passOk = bcrypt.compareSync(password, foundUser.password);
             if (passOk) {
 
-                const payload={
-                    email:foundUser.email,
-                    id:foundUser._id,
-                    username:foundUser.username,
+                const payload = {
+                    email: foundUser.email,
+                    id: foundUser._id,
+                    username: foundUser.username,
                 }
 
-                const token=jwt.sign(payload,jwtSecret,{expiresIn:'1D'});
-                const options={
-                    expiresIn:"1D",
-                    httpOnly:true,
-                    sameSite:"None",
-                    secure:true,
+                const token = jwt.sign(payload, jwtSecret, { expiresIn: '1D' });
+                const options = {
+                    expiresIn: "1D",
+                    httpOnly: true,
+                    sameSite: "Lax",
+                    secure: true, 
                 }
-                res.cookie('token',token,options).status(201).json({
-                    success:true,
-                    token:token,
+                res.cookie('token', token, options).status(201).json({
+                    success: true,
+                    token: token,
                     foundUser,
-                    message:`${foundUser.username} Login Successful`,
+                    message: `${foundUser.username} Login Successful`,
                 })
             } else {
-               return res.status(401).json({ message: 'Invalid password' });
+                return res.status(401).json({ message: 'Invalid password' });
             }
-           
+
         } else {
             return res.status(404).json({ message: 'User NotFound!' });
         }
 
     }
     catch (err) {
-        console.error("error during login : ",err.message);
-        res.status(500).json({success:false, message: 'Internal Server Error' });
+        console.error("error during login : ", err.message);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 })
 
@@ -257,7 +257,7 @@ app.post('/register', async (req, res) => {
     try {
         // Check if the email already exists
         const existingUser = await User.findOne({ email });
- 
+
         if (existingUser) {
             // Email already registered
             return res.status(400).json({ message: 'Email already registered' });
@@ -271,7 +271,7 @@ app.post('/register', async (req, res) => {
             email: email,
         });
         const otp = Math.floor(1000 + Math.random() * 900000);
-        await sendMail(email, "Hello "+username+" Account verification Email", otp);
+        await sendMail(email, "Hello " + username + " Account verification Email", otp);
         console.log("otp: ", otp);
         res.status(201).json({ success: true, message: "User created successfully", otp: otp });
 
@@ -283,7 +283,7 @@ app.post('/register', async (req, res) => {
 })
 
 const PORT = process.env.PORT || 4040
-console.log("Port: ",PORT)
+console.log("Port: ", PORT)
 const server = app.listen(PORT);
 
 
@@ -324,7 +324,7 @@ wss.on('connection', (connection, req) => {
     const cookies = req.headers.cookie;
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
-        
+
         if (tokenCookieString) {
             const token = tokenCookieString.split('=')[1];
             if (token) {
@@ -388,9 +388,9 @@ wss.on('connection', (connection, req) => {
             // console.log("reciept ",recipient);
             // console.log("userId ",connection.userId);
             [...wss.clients]
-                .filter(c=> c.userId===recipient)
-                .forEach(e=>console.log("forEach: ",e.userId,e.username));
-            
+                .filter(c => c.userId === recipient)
+                .forEach(e => console.log("forEach: ", e.userId, e.username));
+
             console.log("reciept: ", recipient);
 
             [...wss.clients]
