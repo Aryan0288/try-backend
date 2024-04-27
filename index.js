@@ -445,14 +445,14 @@ wss.on('connection', (connection, req) => {
                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
                     if (err) throw err;
 
-                    const { userId, username } = UserData;
+                    const { id, username } = UserData;
                     console.log("userData: ",UserData);
-                    console.log("userId: ",userId);
+                    console.log("userId: ",id);
                     try {
-                        const user = await User.findById(userId);
+                        const user = await User.findById(id);
                         console.log("user: ",user);
                         if (user) {
-                            connection.userId = userId;
+                            connection.userId = id;
                             connection.username = user.username;
                         }
                     } catch (error) {
