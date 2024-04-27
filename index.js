@@ -436,16 +436,20 @@ wss.on('connection', (connection, req) => {
     console.log(cookies);
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
+        console.log("tokenString: ",tokenCookieString);
+        
         if (tokenCookieString) {
             const token = tokenCookieString.split('=')[1];
+            console.log("token: ",token);
             if (token) {
                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
                     if (err) throw err;
 
                     const { userId, username } = UserData;
-
+                    console.log("userId: ",userId);
                     try {
                         const user = await User.findById(userId);
+                        console.log("user: ",user);
                         if (user) {
                             connection.userId = userId;
                             connection.username = user.username;
