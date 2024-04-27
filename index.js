@@ -155,16 +155,16 @@ app.get('/profile', (req, res) => {
     }
 })
 
-// app.post('/verify', async (req, res) => {
-//     try {
-//         const email = req.body.email;
-//         await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
-//         return res.status(201).json({ success: true });
-//     } catch (err) {
-//         console.log("Error occurred in /verify POST:", err.message);
-//         return res.status(500).json({ success: false, message: "Internal server error" });
-//     }
-// });
+app.post('/verify', async (req, res) => {
+    try {
+        const email = req.body.email;
+        await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
+        return res.status(201).json({ success: true });
+    } catch (err) {
+        console.log("Error occurred in /verify POST:", err.message);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+});
 
 app.delete("/notverifyDeleted", async (req, res) => {
     try {
