@@ -14,31 +14,21 @@ const MONGO_URL = 'mongodb+srv://chatapp:dpJbj0tFUrqVcQU6@cluster0.ttefoc8.mongo
 
 
 
+
+
 dotenv.config();
 
 const connect = async () => {
-    try {
+    try { 
         await mongoose.connect(process.env.MONGO_URL);
-        console.log("connect to database");
+        console.log("connect to database"); 
     } catch (err) {
-        console.log("error occurr because of .env file " + err);
+        console.log("error occurr because of .env file " + err.message);
     }
-}
+} 
 connect();
 
 
-
-// const connectToDataBase = async()=>{
-
-//     try{
-//         await mongoose.connect(MONGO_URL);
-//         console.log("I am connected to database");
-//     }catch(err){
-//         console.log("error occur: "+err)
-//     }
-// }
-
-// connectToDataBase(MONGO_URL);
 
 const jwtSecret = process.env.JWT_SECRET;
 const bcryptSalt = bcrypt.genSaltSync(10);
@@ -50,10 +40,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin: "https://aryan-chathub.netlify.app",
+    origin: "https://aryan-chat-hub.netlify.app",
     credentials: true,
 }))
-// app.use(cors());
 
 
 
@@ -101,17 +90,14 @@ app.get("/", async (req, res) => {
     // res.json("hello");
 })
 
-app.get('/messages/:userId', async (req, res) => {
+app.get('/messages/:userId/:ourUserId', async (req, res) => {
     const { userId } = req.params;
+    const { ourUserId } = req.params;
     // console.log("userId : ",userId);
-    const userData = await getUserDataFromRequest(req);
-    const ourUserId = userData.id;
-
-    // console.log("userData message: ",userData);
-    // console.log("ourUserId message: ",ourUserId);
+    // console.log("ourUserId : ",ourUserId);
 
     const messages = await Message.find({
-        sender: { $in: [userId, ourUserId] },
+        sender: { $in: [userId, ourUserId] }, 
         recipient: { $in: [userId, ourUserId] },
     }).sort({ createdAt: 1 })
 
@@ -153,10 +139,12 @@ app.get('/people', async (req, res) => {
 
 // create profile 
 app.get('/profile', (req, res) => {
-    const token = req.cookies?.token;
+    // const token = req.cookies?.token;
+    const token=localStorage.getItem("token");
+    console.log(token);
     console.log("token: ", token);
 
-    if (token) {
+    if (token) { 
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
             if (err) throw err;
             // console.log("user data in profile : ",userData);
@@ -167,16 +155,16 @@ app.get('/profile', (req, res) => {
     }
 })
 
-app.post('/verify', async (req, res) => {
-    try {
-        const email = req.body.email;
-        await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
-        return res.status(201).json({ success: true });
-    } catch (err) {
-        console.log("Error occurred in /verify POST:", err.message);
-        return res.status(500).json({ success: false, message: "Internal server error" });
-    }
-});
+// app.post('/verify', async (req, res) => {
+//     try {
+//         const email = req.body.email;
+//         await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
+//         return res.status(201).json({ success: true });
+//     } catch (err) {
+//         console.log("Error occurred in /verify POST:", err.message);
+//         return res.status(500).json({ success: false, message: "Internal server error" });
+//     }
+// });
 
 app.delete("/notverifyDeleted", async (req, res) => {
     try {
@@ -213,10 +201,10 @@ app.post('/login', async (req, res) => {
 
                 const payload = {
                     email: foundUser.email,
-                    id: foundUser._id,
+                    id: foundUser._id, 
                     username: foundUser.username,
                 }
-
+                // return res.status(201).json({success:true,data:payload});
                 const token = jwt.sign(payload, jwtSecret, { expiresIn: '1D' });
                 const options = {
                     expiresIn: "1D",
@@ -224,18 +212,13 @@ app.post('/login', async (req, res) => {
                     SameSite: "None",
                     secure: true,
                 }
-                // res.cookie('token', token, options).status(201).json({
-                //     success: true,
-                //     token: token,
-                //     foundUser,
-                //     message: `${foundUser.username} Login Successful`,
-                // })
-                res.header('token', token, options).status(201).json({
+                res.cookie('token', token, options).status(201).json({
                     success: true,
                     token: token,
                     foundUser,
                     message: `${foundUser.username} Login Successful`,
                 })
+                
             } else {
                 return res.status(401).json({ message: 'Invalid password' });
             }
@@ -252,6 +235,7 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/logout', (req, res) => {
+    localStorage.removeItem("token"); 
     return res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
 })
 
@@ -294,6 +278,7 @@ console.log("Port: ", PORT)
 const server = app.listen(PORT);
 
 
+
 const wss = new ws.WebSocketServer({ server });
 wss.on('connection', (connection, req) => {
 
@@ -323,12 +308,18 @@ wss.on('connection', (connection, req) => {
     }, 5000);
 
     connection.on('pong', () => {
-        clearTimeout(connection.deathTimer);
+        clearTimeout(connection.deathTimer); 
     })
 
-
+    console.log("I am ping pong");
     // read username and id from the cookie for this connection
+ 
+    // console.log("localStorage : ",loginUser)
     const cookies = req.headers.cookie;
+    // const cookies = JSON.parse(loginUser);
+    console.log("storage: ",cookies);
+
+
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
 
@@ -349,23 +340,23 @@ wss.on('connection', (connection, req) => {
                             connection.username = user.username; // Use the actual username from the database
                             // console.log("The username is " + user.username);
                         }
-                    } catch (error) {
+                    } catch (error) { 
                         console.error(error);
                     }
 
-                    // connection.userId=userId;
-                    // connection.username=username;
-                    // console.log("the username is "+username);
                 })
             }
         }
     }
 
+    
 
     // Handle All Messages through this funtion
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
-        const { recipient, text, file } = messageData;
+        const { sender,recipient, text, file } = messageData;
+        senderId=sender;
+        
         let filename = null;
         if (file) {
             const parts = file.name.split('.');
@@ -376,11 +367,6 @@ wss.on('connection', (connection, req) => {
             let d = new Date();
 
             fs.writeFile(path, bufferData, () => {
-                // console.log("file saved : " + path);
-                // console.log("New Date : " + d.getDate() + "/" + d.getDay() + "/" + d.getFullYear());
-                // console.log("time " + d.getTime());
-                // console.log(file.name);
-                // console.log("bufferData = "+ file.data);
             })
         }
 
@@ -394,9 +380,9 @@ wss.on('connection', (connection, req) => {
 
             // console.log("reciept ",recipient);
             // console.log("userId ",connection.userId);
-            [...wss.clients]
-                .filter(c => c.userId === recipient)
-                .forEach(e => console.log("forEach: ", e.userId, e.username));
+            // [...wss.clients]
+            //     .filter(c => c.userId === recipient)
+            //     .forEach(e => console.log("forEach: ", e.userId, e.username));
 
             console.log("reciept: ", recipient);
 
@@ -412,6 +398,8 @@ wss.on('connection', (connection, req) => {
             console.log("file created succesfully");
         }
     });
+
+    
 
 
     // notify everyone about online people (when someone connects)
