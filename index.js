@@ -433,6 +433,7 @@ wss.on('connection', (connection, req) => {
     });
 
     const cookies = req.headers.cookie;
+    console.log(cookies);
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
         if (tokenCookieString) {
