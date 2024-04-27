@@ -446,6 +446,7 @@ wss.on('connection', (connection, req) => {
                     if (err) throw err;
 
                     const { userId, username } = UserData;
+                    console.log("userData: ",UserData);
                     console.log("userId: ",userId);
                     try {
                         const user = await User.findById(userId);
