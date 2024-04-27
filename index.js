@@ -209,9 +209,8 @@ app.post('/login', async (req, res) => {
                 const options = {
                     expiresIn: "1D",
                     httpOnly: true,
-                    SameSite: "None",
-                    secure: true,
                 }
+                console.log("token is here : ",token);
                 res.cookie('token', token, options).status(201).json({
                     success: true,
                     token: token,
@@ -312,11 +311,8 @@ wss.on('connection', (connection, req) => {
     })
 
     console.log("I am ping pong");
-    // read username and id from the cookie for this connection
- 
-    // console.log("localStorage : ",loginUser)
+
     const cookies = req.headers.cookie;
-    // const cookies = JSON.parse(loginUser);
     console.log("storage: ",cookies);
 
 
@@ -355,7 +351,7 @@ wss.on('connection', (connection, req) => {
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
         const { sender,recipient, text, file } = messageData;
-        senderId=sender;
+        // senderId=sender;
         
         let filename = null;
         if (file) {
