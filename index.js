@@ -210,6 +210,8 @@ app.post('/login', async (req, res) => {
                     expiresIn: "1D",
                     httpOnly: true,
                     secure: true,
+                    sameSite:"none",
+                    Path:"/"
                 }
                 console.log("token is here : ",token);
                 res.cookie('token', token, options).status(201).json({
@@ -240,7 +242,6 @@ app.post('/logout', (req, res) => {
 })
 
 const sendMail = require('./connection/sendMail.js');
-const { NONAME } = require('dns');
 
 app.post('/register', async (req, res) => {
     console.log("I am inside register");
