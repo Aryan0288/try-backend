@@ -179,7 +179,7 @@ app.delete("/notverifyDeleted", async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // console.log("I am in the login ",username,password);
+    console.log("I am in the login ",username,password);
 
     try {
         let foundUser;
@@ -213,7 +213,6 @@ app.post('/login', async (req, res) => {
                     sameSite:"none",
                     Path:"/"
                 }
-                console.log("token is here : ",token);
                 res.cookie('token', token, options).status(201).json({
                     success: true,
                     token: token,
