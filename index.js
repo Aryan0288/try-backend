@@ -157,7 +157,7 @@ app.get('/profile', (req, res) => {
 
 app.post('/verify', async (req, res) => {
     try {
-        const email = req.body.email;
+        const email = req.body.emailLs;
         await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
         return res.status(201).json({ success: true });
     } catch (err) {
