@@ -158,6 +158,7 @@ app.get('/profile', (req, res) => {
 app.post('/verify', async (req, res) => {
     try {
         const email = req.body.emailLs;
+        console.log("email in verify ",email);
         await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
         return res.status(201).json({ success: true });
     } catch (err) {
