@@ -29,8 +29,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin: "https://aryan-chathub.netlify.app",
-    // origin: "http://localhost:5173",
+    origin: "https://aryan-chat-hub.netlify.app",
     credentials: true,
 }))
 // app.use(cors());
@@ -306,9 +305,9 @@ const sendMail = require('./connection/sendMail.js');
 
 // })
 
-// new signup
 app.post("/sendotp",otpController.sendOTP);
 
+// new signup
 app.post("/register",async(req,res)=>{
     try {
         console.log("I am in register ");
