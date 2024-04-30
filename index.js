@@ -129,86 +129,7 @@ app.get('/profile', (req, res) => {
     }
 })
 
-// app.post('/verify', async (req, res) => {
-//     try {
-//         console.log("i am verified")
-//         const email = req.body.emailLs;
-//         await User.findOneAndUpdate({ email: email }, { $set: { status: true } });
-//         return res.status(201).json({ success: true });
-//     } catch (err) {
-//         console.log("Error occurred in /verify POST:", err.message);
-//         return res.status(500).json({ success: false, message: "Internal server error" });
-//     }
-// });
 
-// app.delete("/notverifyDeleted", async (req, res) => {
-//     try {
-//         console.log("delete succesfully non verified account");
-//         await User.deleteMany({ status: false });
-//         return res.status(201).json({ success: true, message: "deleted" });
-//     } catch (err) {
-//         console.log("error occur non verified account");
-//         return;
-//     }
-// })
-
-// old login
-// app.post('/login', async (req, res) => {
-//     const { username, password } = req.body;
-//     // console.log("I am in the login ",username,password);
-
-//     try {
-//         let foundUser;
-//         foundUser = await User.findOne({ email: username });
-//         // console.log(foundUser);
-//         if (foundUser === null) {
-//             console.log("User not found")
-//             return res.status(404).json({ message: "User NotFound!" });
-//         }
-//         if (!foundUser.status) {
-//             console.log("user not verify");
-//             return res.status(404).json({ success: false, message: "User NotFound!" });
-//         }
-
-//         if (foundUser) {
-
-//             const passOk = bcrypt.compareSync(password, foundUser.password);
-//             if (passOk) {
-
-//                 const payload = {
-//                     email: foundUser.email,
-//                     id: foundUser._id, 
-//                     username: foundUser.username,
-//                 }
-//                 // return res.status(201).json({success:true,data:payload});
-//                 const token = jwt.sign(payload, jwtSecret, { expiresIn: '1D' });
-//                 const options = {
-//                     expiresIn: "1D",
-//                     httpOnly: true,
-//                     SameSite: "None",
-//                     secure: true,
-//                 }
-//                 res.cookie('token', token, options).status(201).json({
-//                     success: true,
-//                     token: token,
-//                     foundUser,
-//                     message: `${foundUser.username} Login Successful`,
-//                 })
-                
-//             } else {
-//                 return res.status(401).json({ message: 'Invalid password' });
-//             }
-
-//         } else {
-//             return res.status(404).json({ message: 'User NotFound!' });
-//         }
-
-//     }
-//     catch (err) {
-//         console.error("error during login : ", err.message);
-//         res.status(500).json({ success: false, message: 'Internal Server Error' });
-//     }
-// })
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -249,7 +170,7 @@ app.post('/login', async (req, res) => {
                 })
                 
             } else {
-                return res.status(401).json({ message: 'Invalid password' });
+                return res.status(402).json({ message: 'Invalid password' });
             }
 
         } else {
