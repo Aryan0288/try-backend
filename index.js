@@ -137,7 +137,7 @@ app.post('/login', async (req, res) => {
 
     try {
         let foundUser;
-        foundUser = await User.findOne({ email: username });
+        foundUser = await User.findOne({ email });
         console.log(foundUser);
         if (foundUser === null) {
             console.log("User not found")
