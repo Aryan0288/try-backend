@@ -12,7 +12,6 @@ const Message = require('./models/Message');
 const User = require('./models/User');
 const OTP = require('./models/Otp');
 
-
 const otpController = require('./Controllers/otpController.js');
 
 
@@ -30,8 +29,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-    // origin: "https://aryan-chathub.netlify.app",
-    origin: "http://localhost:5173",
+    origin: "https://aryan-chathub.netlify.app",
+    // origin: "http://localhost:5173",
     credentials: true,
 }))
 // app.use(cors());
