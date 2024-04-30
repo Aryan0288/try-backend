@@ -155,7 +155,7 @@ app.get('/profile', (req, res) => {
     }
 })
 
-app.post('/verify', async (req, res) => {
+app.put('/verify', async (req, res) => {
     try {
         const email = req.body.emailLs;
         console.log("email in verify ",email);
@@ -248,12 +248,17 @@ app.post('/register', async (req, res) => {
     const { username, password, email } = req.body;
     try {
         // Check if the email already exists
-        const existingUser = await User.findOne({ email });
-
-        if (existingUser) {
+        const chkEmailVerify = await User.findOne({ email });
+        if (chkEmailVerify && chkEmailVerify.status) {
             // Email already registered
             return res.status(400).json({ message: 'Email already registered' });
         }
+
+        if(chkEmailVerify && !chkEmailVerify.status){
+            await User.findOneAndDelete({email});
+        }
+        // const existingUser = await User.findOne({ email });
+
 
         console.log(username + " " + email + " " + password);
         const hashPassword = bcrypt.hashSync(password, bcryptSalt);
