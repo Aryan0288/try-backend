@@ -104,32 +104,32 @@ app.get('/messages/:userId/:ourUserId', async (req, res) => {
     res.json(messages);
 })
 
-app.delete('/messages/:id', async (req, res) => {
-    const messageId = req.params.id;
-    console.log("id : " + messageId);
+// app.delete('/messages/:id', async (req, res) => {
+//     const messageId = req.params.id;
+//     console.log("id : " + messageId);
 
-    // const data=await Message.findByIdAndDelete({_id:messageId});
-    // res.send({success:true,message:"data delete succesfully",data:data});
+//     // const data=await Message.findByIdAndDelete({_id:messageId});
+//     // res.send({success:true,message:"data delete succesfully",data:data});
 
 
-    try {
-        // Find the message by ID and remove it
-        //   const deletedMessage = await Message.findByIdAndRemove(messageId);
-        const deletedMessage = await Message.findOneAndDelete({ _id: messageId });
+//     try {
+//         // Find the message by ID and remove it
+//         //   const deletedMessage = await Message.findByIdAndRemove(messageId);
+//         const deletedMessage = await Message.findOneAndDelete({ _id: messageId });
 
-        if (!deletedMessage) {
-            return res.status(404).json({ error: 'Message not found' });
-        }
+//         if (!deletedMessage) {
+//             return res.status(404).json({ error: 'Message not found' });
+//         }
 
-        // Successful deletion
-        //   res.json({ message: 'Message deleted successfully' });
-        console.log("message deleted");
-        res.status(200).json({ message: 'Message deleted successfully', deletedMessage });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+//         // Successful deletion
+//         //   res.json({ message: 'Message deleted successfully' });
+//         console.log("message deleted");
+//         res.status(200).json({ message: 'Message deleted successfully', deletedMessage });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
 
 
 app.get('/people', async (req, res) => {
@@ -212,7 +212,7 @@ app.post('/login', async (req, res) => {
                     httpOnly: true,
                     secure: true,
                     sameSite:"none",
-                    Path:"/"
+                    // Path:"/"
                 }
                 res.cookie('token', token, options).status(201).json({
                     success: true,
@@ -237,7 +237,6 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/logout', (req, res) => {
-    localStorage.removeItem("token"); 
     return res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
 })
 
@@ -245,8 +244,12 @@ const sendMail = require('./connection/sendMail.js');
 
 app.post('/register', async (req, res) => {
     console.log("I am inside register");
-    const { username, password, email } = req.body;
     try {
+        
+        const { username, password, email } = req.body;
+        console.log("username : ",username);
+        console.log("password : ",password);
+        console.log("email : ",email);
         // Check if the email already exists
         const chkEmailVerify = await User.findOne({ email });
         if (chkEmailVerify && chkEmailVerify.status) {
@@ -259,15 +262,14 @@ app.post('/register', async (req, res) => {
         }
         // const existingUser = await User.findOne({ email });
 
+        const otp = Math.floor(1000 + Math.random() * 900000);
 
-        console.log(username + " " + email + " " + password);
         const hashPassword = bcrypt.hashSync(password, bcryptSalt);
         const createdUser = await User.create({
             username: username,
             password: hashPassword,
             email: email,
         });
-        const otp = Math.floor(1000 + Math.random() * 900000);
         await sendMail(email, "Hello " + username + " Account verification Email", otp);
         console.log("otp: ", otp);
         res.status(201).json({ success: true, message: "User created successfully", otp: otp });
