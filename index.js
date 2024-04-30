@@ -287,139 +287,20 @@ const server = app.listen(PORT);
 
 
 
-// const wss = new ws.WebSocketServer({ server });
-// wss.on('connection', (connection, req) => {
-
-//     function notifyAboutOnlinePeople() {
-//         [...wss.clients].forEach(client => {
-//             client.send(JSON.stringify({
-//                 online: [...wss.clients]
-//                     .map(c => ({ userId: c.userId, username: c.username })),
-//             }));
-//         }
-//         )
-//     }
-
-
-//     connection.isAlive = true;
-
-//     connection.timer = setInterval(() => {
-//         connection.ping();
-//         connection.deathTimer = setTimeout(() => {
-//             connection.isAlive = false;
-//             clearInterval(connection.timer);
-//             connection.terminate();
-//             notifyAboutOnlinePeople();
-//             // console.log('continue-1');
-//             // console.log('continue-2');
-//         }, 1000);
-//     }, 5000);
-
-//     connection.on('pong', () => {
-//         clearTimeout(connection.deathTimer); 
-//     })
-
-//     console.log("I am ping pong");
-
-//     const cookies = req.headers.cookie;
-//     console.log("storage: ",cookies);
-
-
-//     if (cookies) {
-//         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
-
-//         if (tokenCookieString) {
-//             const token = tokenCookieString.split('=')[1];
-//             if (token) {
-//                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
-//                     if (err) throw err;
-//                     // console.log("cookies is here: ",token);
-//                     const { id, username } = UserData;
-//                     // console.log("User data userId : ",id);
-//                     // console.log("User data username : ",username);
-
-//                     try {
-//                         const user = await User.findById(id);
-//                         if (user) {
-//                             connection.userId = id;
-//                             connection.username = user.username; // Use the actual username from the database
-//                             // console.log("The username is " + user.username);
-//                         }
-//                     } catch (error) { 
-//                         console.error(error);
-//                     }
-
-//                 })
-//             }
-//         }
-//     }
-
-    
-
-//     // Handle All Messages through this funtion
-//     connection.on('message', async (message) => {
-//         const messageData = JSON.parse(message.toString());
-//         const { sender,recipient, text, file } = messageData;
-//         // senderId=sender;
-        
-//         let filename = null;
-//         if (file) {
-//             const parts = file.name.split('.');
-//             const ext = parts[parts.length - 1];
-//             filename = Date.now() + '.' + ext;
-//             const path = __dirname + "/uploads/" + file.name;
-//             const bufferData = new Buffer(file.data.split(',')[1], 'base64');
-//             let d = new Date();
-
-//             fs.writeFile(path, bufferData, () => {
-//             })
-//         }
-
-//         if (recipient && (text || file)) {
-//             const MessageDoc = await Message.create({
-//                 sender: connection.userId,
-//                 recipient,
-//                 text,
-//                 file: file ? file.name : null,
-//             });
-
-//             // console.log("reciept ",recipient);
-//             // console.log("userId ",connection.userId);
-//             // [...wss.clients]
-//             //     .filter(c => c.userId === recipient)
-//             //     .forEach(e => console.log("forEach: ", e.userId, e.username));
-
-//             console.log("reciept: ", recipient);
-
-//             [...wss.clients]
-//                 .filter(c => c.userId === recipient)
-//                 .forEach(c => c.send(JSON.stringify({
-//                     text,
-//                     sender: connection.userId,
-//                     recipient,
-//                     file: file ? file.name : null,
-//                     _id: MessageDoc._id,
-//                 })));
-//             console.log("file created succesfully");
-//         }
-//     });
-
-    
-
-
-//     // notify everyone about online people (when someone connects)
-//     notifyAboutOnlinePeople();
-// });
-
 const wss = new ws.WebSocketServer({ server });
 
 wss.on('connection', (connection, req) => {
+
     function notifyAboutOnlinePeople() {
-        const onlineUsers = [...wss.clients].map(c => ({ userId: c.userId, username: c.username }));
         [...wss.clients].forEach(client => {
-            client.send(JSON.stringify({ online: onlineUsers }));
-        });
+            client.send(JSON.stringify({
+                online: [...wss.clients]
+                    .map(c => ({ userId: c.userId, username: c.username })),
+            }));
+        }
+        )
     }
+
 
     connection.isAlive = true;
 
@@ -430,39 +311,43 @@ wss.on('connection', (connection, req) => {
             clearInterval(connection.timer);
             connection.terminate();
             notifyAboutOnlinePeople();
-            console.log('continue-1');
-            console.log('continue-2');
+            // console.log('continue-1');
+            // console.log('continue-2');
         }, 1000);
     }, 5000);
 
     connection.on('pong', () => {
-        clearTimeout(connection.deathTimer);
-    });
+        clearTimeout(connection.deathTimer); 
+    })
+
+    console.log("I am ping pong");
 
     const cookies = req.headers.cookie;
-    console.log(cookies);
+    console.log("storage: ",cookies);
+
+
     if (cookies) {
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
-        console.log("tokenString: ",tokenCookieString);
-        
+
         if (tokenCookieString) {
             const token = tokenCookieString.split('=')[1];
-            console.log("token: ",token);
             if (token) {
                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
                     if (err) throw err;
-
+                    // console.log("cookies is here: ",token);
                     const { id, username } = UserData;
-                    console.log("userData: ",UserData);
-                    console.log("userId: ",id);
+                    console.log("userData in socket : ",userData);
+                    // console.log("User data userId : ",id);
+                    // console.log("User data username : ",username);
+
                     try {
                         const user = await User.findById(id);
-                        console.log("user: ",user);
+                        console.log("user in socket : ",user);
                         if (user) {
                             connection.userId = id;
-                            connection.username = user.username;
+                            connection.username = user.username; 
                         }
-                    } catch (error) {
+                    } catch (error) { 
                         console.error(error);
                     }
 
@@ -471,31 +356,42 @@ wss.on('connection', (connection, req) => {
         }
     }
 
+    
+
+    // Handle All Messages through this funtion
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
         const { recipient, text, file } = messageData;
+        // senderId=sender;
+        
         let filename = null;
         if (file) {
             const parts = file.name.split('.');
             const ext = parts[parts.length - 1];
             filename = Date.now() + '.' + ext;
-            const path = __dirname + "/uploads/" + filename;
+            const path = __dirname + "/uploads/" + file.name;
             const bufferData = Buffer.from(file.data.split(',')[1], 'base64');
+            let d = new Date();
 
             fs.writeFile(path, bufferData, () => {
-                console.log("file saved : " + path);
-            });
+            })
         }
-        console.log("filename : ", filename);
-        console.log("text : ", text);
 
         if (recipient && (text || file)) {
             const MessageDoc = await Message.create({
                 sender: connection.userId,
                 recipient,
                 text,
-                file: file ? filename : null,
+                file: file ? file.name : null,
             });
+
+            // console.log("reciept ",recipient);
+            // console.log("userId ",connection.userId);
+            // [...wss.clients]
+            //     .filter(c => c.userId === recipient)
+            //     .forEach(e => console.log("forEach: ", e.userId, e.username));
+
+            console.log("reciept: ", recipient);
 
             [...wss.clients]
                 .filter(c => c.userId === recipient)
@@ -503,15 +399,120 @@ wss.on('connection', (connection, req) => {
                     text,
                     sender: connection.userId,
                     recipient,
-                    file: file ? filename : null,
+                    file: file ? file.name : null,
                     _id: MessageDoc._id,
                 })));
-            console.log("file created successfully");
+            console.log("file created succesfully");
         }
     });
 
+    
+
+
+    // notify everyone about online people (when someone connects)
     notifyAboutOnlinePeople();
 });
+
+// const wss = new ws.WebSocketServer({ server });
+// wss.on('connection', (connection, req) => {
+//     function notifyAboutOnlinePeople() {
+//         const onlineUsers = [...wss.clients].map(c => ({ userId: c.userId, username: c.username }));
+//         [...wss.clients].forEach(client => {
+//             client.send(JSON.stringify({ online: onlineUsers }));
+//         });
+//     }
+
+//     connection.isAlive = true;
+
+//     connection.timer = setInterval(() => {
+//         connection.ping();
+//         connection.deathTimer = setTimeout(() => {
+//             connection.isAlive = false;
+//             clearInterval(connection.timer);
+//             connection.terminate();
+//             notifyAboutOnlinePeople();
+//             console.log('continue-1');
+//             console.log('continue-2');
+//         }, 1000);
+//     }, 5000);
+
+//     connection.on('pong', () => {
+//         clearTimeout(connection.deathTimer);
+//     });
+
+//     const cookies = req.headers.cookie;
+//     console.log(cookies);
+//     if (cookies) {
+//         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
+//         console.log("tokenString: ",tokenCookieString);
+        
+//         if (tokenCookieString) {
+//             const token = tokenCookieString.split('=')[1];
+//             console.log("token: ",token);
+//             if (token) {
+//                 jwt.verify(token, jwtSecret, {}, async (err, UserData) => {
+//                     if (err) throw err;
+
+//                     const { id, username } = UserData;
+//                     console.log("userData: ",UserData);
+//                     console.log("userId: ",id);
+//                     try {
+//                         const user = await User.findById(id);
+//                         console.log("user: ",user);
+//                         if (user) {
+//                             connection.userId = id;
+//                             connection.username = user.username;
+//                         }
+//                     } catch (error) {
+//                         console.error(error);
+//                     }
+
+//                 })
+//             }
+//         }
+//     }
+
+//     connection.on('message', async (message) => {
+//         const messageData = JSON.parse(message.toString());
+//         const { recipient, text, file } = messageData;
+//         let filename = null;
+//         if (file) {
+//             const parts = file.name.split('.');
+//             const ext = parts[parts.length - 1];
+//             filename = Date.now() + '.' + ext;
+//             const path = __dirname + "/uploads/" + filename;
+//             const bufferData = Buffer.from(file.data.split(',')[1], 'base64');
+
+//             fs.writeFile(path, bufferData, () => {
+//                 console.log("file saved : " + path);
+//             });
+//         }
+//         console.log("filename : ", filename);
+//         console.log("text : ", text);
+
+//         if (recipient && (text || file)) {
+//             const MessageDoc = await Message.create({
+//                 sender: connection.userId,
+//                 recipient,
+//                 text,
+//                 file: file ? filename : null,
+//             });
+
+//             [...wss.clients]
+//                 .filter(c => c.userId === recipient)
+//                 .forEach(c => c.send(JSON.stringify({
+//                     text,
+//                     sender: connection.userId,
+//                     recipient,
+//                     file: file ? filename : null,
+//                     _id: MessageDoc._id,
+//                 })));
+//             console.log("file created successfully");
+//         }
+//     });
+
+//     notifyAboutOnlinePeople();
+// });
 
 
 
