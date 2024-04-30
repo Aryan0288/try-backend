@@ -336,7 +336,7 @@ wss.on('connection', (connection, req) => {
                     if (err) throw err;
                     // console.log("cookies is here: ",token);
                     const { id, username } = UserData;
-                    console.log("userData in socket : ",userData);
+                    console.log("userData in socket : ",UserData);
                     // console.log("User data userId : ",id);
                     // console.log("User data username : ",username);
 
