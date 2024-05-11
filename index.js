@@ -410,7 +410,7 @@ wss.on('connection', (connection, req) => {
             const path = __dirname + "/uploads/" + file.name;
             const bufferData = new Buffer(file.data.split(',')[1], 'base64');
             
-
+            console.log("path : ",path);
             fs.writeFile(path, bufferData, () => {
             })
         }
