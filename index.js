@@ -42,19 +42,19 @@ app.get('/test', (req, res) => {
 console.log("Hello ji I am a Index.js file in api folder");
 
 
-// async function getUserDataFromRequest(req) {
-//     try {
-//         const token = req.cookies?.token;
-//         if (token) {
-//             const userData = jwt.verify(token, jwtSecret, {});
-//             return userData;
-//         } else {
-//             return new Error('Token not found');
-//         }
-//     } catch (error) {
-//         return { status: false, message: error.message }; // Assuming you're handling the response in the caller
-//     }
-// }
+async function getUserDataFromRequest(req) {
+    try {
+        const token = req.cookies?.token;
+        if (token) {
+            const userData = jwt.verify(token, jwtSecret, {});
+            return userData;
+        } else {
+            return new Error('Token not found');
+        }
+    } catch (error) {
+        return { status: false, message: error.message }; // Assuming you're handling the response in the caller
+    }
+}
 
 
 app.get("/", async (req, res) => {
@@ -64,19 +64,33 @@ app.get("/", async (req, res) => {
     // res.json("hello");
 })
 
-app.get('/messages/:userId/:ourUserId', async (req, res) => {
-    const { userId } = req.params;
-    const { ourUserId } = req.params;
-    // console.log("userId : ",userId);
-    // console.log("ourUserId : ",ourUserId);
+// app.get('/messages/:userId/:ourUserId', async (req, res) => {
+//     const { userId } = req.params;
+//     const { ourUserId } = req.params;
+//     // console.log("userId : ",userId);
+//     // console.log("ourUserId : ",ourUserId);
 
+//     const messages = await Message.find({
+//         sender: { $in: [userId, ourUserId] }, 
+//         recipient: { $in: [userId, ourUserId] },
+//     }).sort({ createdAt: 1 })
+
+//     res.json(messages);
+// })
+
+// new message fetch
+
+app.get('/messages/:userId', async (req,res) => {
+    const {userId} = req.params;
+    console.log("userId: " ,userId);
+    const userData = await getUserDataFromRequest(req);
+    const ourUserId = userData.userId;
     const messages = await Message.find({
-        sender: { $in: [userId, ourUserId] }, 
-        recipient: { $in: [userId, ourUserId] },
-    }).sort({ createdAt: 1 })
-
+      sender:{$in:[userId,ourUserId]},
+      recipient:{$in:[userId,ourUserId]},
+    }).sort({createdAt: 1});
     res.json(messages);
-})
+  });
 
 // app.delete('/messages/:id', async (req, res) => {
 //     const messageId = req.params.id;
