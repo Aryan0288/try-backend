@@ -363,7 +363,7 @@ wss.on('connection', (connection, req) => {
     // console.log("localStorage : ",loginUser)
     const cookies = req.headers.cookie;
     // const cookies = JSON.parse(loginUser);
-    console.log("storage: ", cookies);
+    // console.log("storage: ", cookies);
 
 
     if (cookies) {
@@ -400,8 +400,7 @@ wss.on('connection', (connection, req) => {
     // Handle All Messages through this funtion
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
-        const { sender, recipient, text, file } = messageData;
-        senderId = sender;
+        const { recipient, text, file } = messageData;
 
         let filename = null;
         if (file) {
@@ -410,7 +409,7 @@ wss.on('connection', (connection, req) => {
             filename = Date.now() + '.' + ext;
             const path = __dirname + "/uploads/" + file.name;
             const bufferData = new Buffer(file.data.split(',')[1], 'base64');
-            let d = new Date();
+            
 
             fs.writeFile(path, bufferData, () => {
             })
@@ -424,13 +423,7 @@ wss.on('connection', (connection, req) => {
                 file: file ? file.name : null,
             });
 
-            // console.log("reciept ",recipient);
-            // console.log("userId ",connection.userId);
-            // [...wss.clients]
-            //     .filter(c => c.userId === recipient)
-            //     .forEach(e => console.log("forEach: ", e.userId, e.username));
-
-            console.log("reciept: ", recipient);
+            
 
             [...wss.clients]
                 .filter(c => c.userId === recipient)
@@ -438,7 +431,7 @@ wss.on('connection', (connection, req) => {
                     text,
                     sender: connection.userId,
                     recipient,
-                    file: file ? file.name : null,
+                    file: file ? filename : null,
                     _id: MessageDoc._id,
                 })));
             console.log("file created succesfully");
