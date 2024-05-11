@@ -15,7 +15,7 @@ const OTP = require('./models/Otp');
 const otpController = require('./Controllers/otpController.js');
 
 
-const connection=require('./connection/dbConnection.js');
+const connection = require('./connection/dbConnection.js');
 connection();
 
 
@@ -42,19 +42,19 @@ app.get('/test', (req, res) => {
 console.log("Hello ji I am a Index.js file in api folder");
 
 
-async function getUserDataFromRequest(req) {
-    try {
-        const token = req.cookies?.token;
-        if (token) {
-            const userData = jwt.verify(token, jwtSecret, {});
-            return userData;
-        } else {
-            return new Error('Token not found');
-        }
-    } catch (error) {
-        return { status: false, message: error.message }; // Assuming you're handling the response in the caller
-    }
-}
+// async function getUserDataFromRequest(req) {
+//     try {
+//         const token = req.cookies?.token;
+//         if (token) {
+//             const userData = jwt.verify(token, jwtSecret, {});
+//             return userData;
+//         } else {
+//             return new Error('Token not found');
+//         }
+//     } catch (error) {
+//         return { status: false, message: error.message }; // Assuming you're handling the response in the caller
+//     }
+// }
 
 
 app.get("/", async (req, res) => {
@@ -78,19 +78,37 @@ app.get("/", async (req, res) => {
 //     res.json(messages);
 // })
 
-// new message fetch
 
-app.get('/messages/:userId', async (req,res) => {
-    const {userId} = req.params;
-    console.log("userId: " ,userId);
+
+
+
+
+async function getUserDataFromRequest(req) {
+    return new Promise((resolve, reject) => {
+        const token = req.cookies?.token;
+        if (token) {
+            jwt.verify(token, jwtSecret, {}, (err, userData) => {
+                if (err) throw err;
+                resolve(userData);
+            });
+        } else {
+            reject('no token');
+        }
+    });
+
+}
+// new message fetch
+app.get('/messages/:userId', async (req, res) => {
+    const { userId } = req.params;
+    console.log("userId: ", userId);
     const userData = await getUserDataFromRequest(req);
     const ourUserId = userData.userId;
     const messages = await Message.find({
-      sender:{$in:[userId,ourUserId]},
-      recipient:{$in:[userId,ourUserId]},
-    }).sort({createdAt: 1});
+        sender: { $in: [userId, ourUserId] },
+        recipient: { $in: [userId, ourUserId] },
+    }).sort({ createdAt: 1 });
     res.json(messages);
-  });
+});
 
 // app.delete('/messages/:id', async (req, res) => {
 //     const messageId = req.params.id;
@@ -128,11 +146,11 @@ app.get('/people', async (req, res) => {
 // create profile 
 app.get('/profile', (req, res) => {
     // const token = req.cookies?.token;
-    const token=localStorage.getItem("token");
+    const token = localStorage.getItem("token");
     console.log(token);
     console.log("token: ", token);
 
-    if (token) { 
+    if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
             if (err) throw err;
             // console.log("user data in profile : ",userData);
@@ -151,8 +169,8 @@ app.post('/login', async (req, res) => {
 
     try {
         let foundUser;
-        foundUser = await User.findOne({ email:username });
-        console.log("foundUser ",foundUser);
+        foundUser = await User.findOne({ email: username });
+        console.log("foundUser ", foundUser);
         if (!foundUser) {
             console.log("User not found")
             return res.status(401).json({ message: "User NotFound!" });
@@ -165,7 +183,7 @@ app.post('/login', async (req, res) => {
 
                 const payload = {
                     email: foundUser.email,
-                    id: foundUser._id, 
+                    id: foundUser._id,
                     username: foundUser.username,
                 }
                 // return res.status(201).json({success:true,data:payload});
@@ -182,7 +200,7 @@ app.post('/login', async (req, res) => {
                     foundUser,
                     message: `${foundUser.username} Login Successful`,
                 })
-                
+
             } else {
                 return res.status(402).json({ message: 'Invalid password' });
             }
@@ -199,7 +217,7 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/logout', (req, res) => {
-    localStorage.removeItem("token"); 
+    localStorage.removeItem("token");
     return res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
 })
 
@@ -221,9 +239,9 @@ const sendMail = require('./connection/sendMail.js');
 
 //         console.log(username + " " + email + " " + password);
 //         const hashPassword = bcrypt.hashSync(password, bcryptSalt);
-        
+
 //         const otp = Math.floor(1000 + Math.random() * 900000);
-        
+
 //         const createdUser = await User.create({
 //             username: username,
 //             password: hashPassword,
@@ -240,62 +258,62 @@ const sendMail = require('./connection/sendMail.js');
 
 // })
 
-app.post("/sendotp",otpController.sendOTP);
+app.post("/sendotp", otpController.sendOTP);
 
 // new signup
-app.post("/register",async(req,res)=>{
+app.post("/register", async (req, res) => {
     try {
         console.log("I am in register ");
         const { name, email, password, otp } = req.body;
 
-        console.log("data : ",name,email,password,otp);
+        console.log("data : ", name, email, password, otp);
         // Check if all details are provided
         if (!name || !email || !password || !otp) {
-          return res.status(403).json({
-            success: false,
-            message: 'All fields are required',
-          });
+            return res.status(403).json({
+                success: false,
+                message: 'All fields are required',
+            });
         }
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-          return res.status(400).json({
-            success: false,
-            message: 'User already exists',
-          });
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists',
+            });
         }
         // Find the most recent OTP for the email
         const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
         if (response.length === 0 || otp !== response[0].otp) {
-          return res.status(400).json({
-            success: false,
-            message: 'The OTP is not valid',
-          });
+            return res.status(400).json({
+                success: false,
+                message: 'The OTP is not valid',
+            });
         }
         // Secure password
         let hashedPassword;
         try {
-          hashedPassword = await bcrypt.hash(password, 10);
+            hashedPassword = await bcrypt.hash(password, 10);
         } catch (error) {
-          return res.status(500).json({
-            success: false,
-            message: `Hashing password error for ${password}: ` + error.message,
-          });
+            return res.status(500).json({
+                success: false,
+                message: `Hashing password error for ${password}: ` + error.message,
+            });
         }
         const newUser = await User.create({
-          username:name,
-          email,
-          password: hashedPassword,
+            username: name,
+            email,
+            password: hashedPassword,
         });
         return res.status(201).json({
-          success: true,
-          message: 'User registered successfully',
-          user: newUser,
+            success: true,
+            message: 'User registered successfully',
+            user: newUser,
         });
-      } catch (error) {
+    } catch (error) {
         console.log(error.message);
         return res.status(500).json({ success: false, error: error.message });
-      }
+    }
 })
 
 
@@ -335,16 +353,16 @@ wss.on('connection', (connection, req) => {
     }, 5000);
 
     connection.on('pong', () => {
-        clearTimeout(connection.deathTimer); 
+        clearTimeout(connection.deathTimer);
     })
 
     console.log("I am ping pong");
     // read username and id from the cookie for this connection
- 
+
     // console.log("localStorage : ",loginUser)
     const cookies = req.headers.cookie;
     // const cookies = JSON.parse(loginUser);
-    console.log("storage: ",cookies);
+    console.log("storage: ", cookies);
 
 
     if (cookies) {
@@ -367,7 +385,7 @@ wss.on('connection', (connection, req) => {
                             connection.username = user.username; // Use the actual username from the database
                             // console.log("The username is " + user.username);
                         }
-                    } catch (error) { 
+                    } catch (error) {
                         console.error(error);
                     }
 
@@ -376,14 +394,14 @@ wss.on('connection', (connection, req) => {
         }
     }
 
-    
+
 
     // Handle All Messages through this funtion
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
-        const { sender,recipient, text, file } = messageData;
-        senderId=sender;
-        
+        const { sender, recipient, text, file } = messageData;
+        senderId = sender;
+
         let filename = null;
         if (file) {
             const parts = file.name.split('.');
@@ -426,7 +444,7 @@ wss.on('connection', (connection, req) => {
         }
     });
 
-    
+
 
 
     // notify everyone about online people (when someone connects)
