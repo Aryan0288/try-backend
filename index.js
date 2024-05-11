@@ -423,7 +423,7 @@ wss.on('connection', (connection, req) => {
                 file: file ? file.name : null,
             });
 
-            
+            console.log("file present: ",file);
 
             [...wss.clients]
                 .filter(c => c.userId === recipient)
@@ -431,7 +431,7 @@ wss.on('connection', (connection, req) => {
                     text,
                     sender: connection.userId,
                     recipient,
-                    file: file ? file.name : null,
+                    file: file ? file.name : "aryan",
                     _id: MessageDoc._id,
                 })));
             console.log("file created succesfully");
