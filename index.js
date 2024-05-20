@@ -28,6 +28,10 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
+// app.use(cors({
+//     origin: "http://localhost:5173",
+//     credentials: true,
+// }))
 app.use(cors({
     origin: "https://aryan-chat-hub.netlify.app",
     credentials: true,
@@ -100,9 +104,9 @@ async function getUserDataFromRequest(req) {
 // new message fetch
 app.get('/messages/:userId', async (req, res) => {
     const { userId } = req.params;
-    console.log("userId: ", userId);
+    // console.log("userId: ", userId);
     const userData = await getUserDataFromRequest(req);
-    console.log(userData);
+    // console.log(userData);
     const ourUserId = userData.id;
     const messages = await Message.find({
         sender: { $in: [userId, ourUserId] },
@@ -139,6 +143,7 @@ app.get('/messages/:userId', async (req, res) => {
 // });
 
 
+
 app.get('/people', async (req, res) => {
     const users = await User.find({}, { '_id': 1, username: 1 });
     res.json(users);
@@ -148,8 +153,8 @@ app.get('/people', async (req, res) => {
 app.get('/profile', (req, res) => {
     // const token = req.cookies?.token;
     const token = localStorage.getItem("token");
-    console.log(token);
-    console.log("token: ", token);
+    // console.log(token);
+    // console.log("token: ", token);
 
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
@@ -171,7 +176,7 @@ app.post('/login', async (req, res) => {
     try {
         let foundUser;
         foundUser = await User.findOne({ email: username });
-        console.log("foundUser ", foundUser);
+        // console.log("foundUser ", foundUser);
         if (!foundUser) {
             console.log("User not found")
             return res.status(401).json({ message: "User NotFound!" });
@@ -180,7 +185,7 @@ app.post('/login', async (req, res) => {
         if (foundUser) {
 
             const passOk = bcrypt.compareSync(password, foundUser.password);
-            if (passOk) {
+            if (passOk) { 
 
                 const payload = {
                     email: foundUser.email,
@@ -189,12 +194,18 @@ app.post('/login', async (req, res) => {
                 }
                 // return res.status(201).json({success:true,data:payload});
                 const token = jwt.sign(payload, jwtSecret, { expiresIn: '1D' });
-                const options = {
-                    expiresIn: "1D",
+                // const options = {
+                //     expiresIn: "1D",
+                //     httpOnly: true,
+                //     sameSite: "none",
+                //     secure: true,
+                // }
+                const options = {  
                     httpOnly: true,
                     sameSite: "none",
                     secure: true,
-                }
+                    maxAge: 24 * 60 * 60 * 1000, // 1 day
+                };
                 res.cookie('token', token, options).status(201).json({
                     success: true,
                     token: token,
@@ -218,12 +229,28 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/logout', (req, res) => {
-    localStorage.removeItem("token");
-    return res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
-})
+    console.log("I am in logout");
+    res.cookie('token', '', { 
+        sameSite: 'none', 
+        secure: true, 
+        expires: new Date(0) // Set the expiration date to a past date
+    });
+    return res.json('ok');
+});
 
 const sendMail = require('./connection/sendMail.js');
 
+app.get('/tokenpresent',(req,res)=>{
+    try{
+        console.log("i am in token")
+        const cookie=req.cookies?.token;
+        if(cookie){
+            return res.status(200).json({success:true});
+        }
+    }catch(err){
+        return res.status(401).json({success:false});
+    }
+})
 
 // this is older
 // app.post('/register', async (req, res) => {
@@ -264,10 +291,10 @@ app.post("/sendotp", otpController.sendOTP);
 // new signup
 app.post("/register", async (req, res) => {
     try {
-        console.log("I am in register ");
+        // console.log("I am in register ");
         const { name, email, password, otp } = req.body;
 
-        console.log("data : ", name, email, password, otp);
+        // console.log("data : ", name, email, password, otp);
         // Check if all details are provided
         if (!name || !email || !password || !otp) {
             return res.status(403).json({
@@ -357,7 +384,7 @@ wss.on('connection', (connection, req) => {
         clearTimeout(connection.deathTimer);
     })
 
-    console.log("I am ping pong");
+    // console.log("I am ping pong");
     // read username and id from the cookie for this connection
 
     // console.log("localStorage : ",loginUser)
@@ -410,7 +437,7 @@ wss.on('connection', (connection, req) => {
             const path = __dirname + "/uploads/" + file.name;
             const bufferData = new Buffer(file.data.split(',')[1], 'base64');
             
-            console.log("path : ",path);
+            // console.log("path : ",path);
             fs.writeFile(path, bufferData, () => {
             })
         }
