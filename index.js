@@ -36,7 +36,6 @@ app.use(cors({
     origin: "https://aryan-chat-hub.netlify.app",
     credentials: true,
 }))
-// app.use(cors());
 
 
 
@@ -375,8 +374,8 @@ wss.on('connection', (connection, req) => {
             clearInterval(connection.timer);
             connection.terminate();
             notifyAboutOnlinePeople();
-            // console.log('continue-1');
-            // console.log('continue-2');
+            console.log('continue-1');
+            console.log('continue-2');
         }, 1000);
     }, 5000);
 
@@ -458,7 +457,7 @@ wss.on('connection', (connection, req) => {
                     text,
                     sender: connection.userId,
                     recipient,
-                    file: file ? file.name : "aryan",
+                    file: file ? file.name : "",
                     _id: MessageDoc._id,
                 })));
             console.log("file created succesfully");
