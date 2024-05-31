@@ -28,14 +28,14 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use(cors({
-//     origin: "http://localhost:5173",
-//     credentials: true,
-// }))
 app.use(cors({
-    origin: "https://aryan-chat-hub.netlify.app",
+    origin: "http://localhost:5173",
     credentials: true,
 }))
+// app.use(cors({
+//     origin: "https://aryan-chat-hub.netlify.app",
+//     credentials: true,
+// }))
 
 
 
@@ -102,16 +102,24 @@ async function getUserDataFromRequest(req) {
 }
 // new message fetch
 app.get('/messages/:userId', async (req, res) => {
-    const { userId } = req.params;
-    // console.log("userId: ", userId);
-    const userData = await getUserDataFromRequest(req);
-    // console.log(userData);
-    const ourUserId = userData.id;
-    const messages = await Message.find({
+    try{
+
+        const { userId } = req.params;
+        console.log("userId: ", userId);
+        const userData = await getUserDataFromRequest(req);
+        // console.log(userData);
+        const ourUserId = userData.id;
+        const messages = await Message.find({
         sender: { $in: [userId, ourUserId] },
         recipient: { $in: [userId, ourUserId] },
     }).sort({ createdAt: 1 });
-    res.json(messages);
+
+    const userInfo=await User.find({_id:userId});
+    
+    res.json({data:messages,info:userInfo});
+    }catch(err){
+        return res.status(401).json({msg:"error occur"})      
+    }
 });
 
 // app.delete('/messages/:id', async (req, res) => {
@@ -150,10 +158,7 @@ app.get('/people', async (req, res) => {
 
 // create profile 
 app.get('/profile', (req, res) => {
-    // const token = req.cookies?.token;
-    const token = localStorage.getItem("token");
-    // console.log(token);
-    // console.log("token: ", token);
+    const token = req.cookies?.token;
 
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
@@ -244,7 +249,7 @@ app.get('/tokenpresent',(req,res)=>{
         console.log("i am in token")
         const cookie=req.cookies?.token;
         if(cookie){
-            return res.status(200).json({success:true});
+            return res.status(200).json({success:true,cookie:cookie});
         }
     }catch(err){
         return res.status(401).json({success:false});
@@ -300,7 +305,7 @@ app.post("/register", async (req, res) => {
                 success: false,
                 message: 'All fields are required',
             });
-        }
+        } 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {

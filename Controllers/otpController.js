@@ -14,7 +14,7 @@ exports.sendOTP = async (req, res) => {
         message: 'User is already registered',
       });
     }
-    let otp = otpGenerator.generate(6, {
+    let otp = otpGenerator.generate(4, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,
       specialChars: false,
