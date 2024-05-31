@@ -28,14 +28,14 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-}))
 // app.use(cors({
-//     origin: "https://aryan-chat-hub.netlify.app",
+//     origin: "http://localhost:5173",
 //     credentials: true,
 // }))
+app.use(cors({
+    origin: "https://aryan-chat-hub.netlify.app",
+    credentials: true,
+}))
 
 
 
