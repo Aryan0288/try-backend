@@ -28,14 +28,11 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use(cors({
-//     origin: "http://localhost:5173",
-//     credentials: true,
-// }))
 app.use(cors({
-    origin: "https://aryan-chat-hub.netlify.app",
+    origin: process.env.Frontend_URL,
     credentials: true,
 }))
+
 
 
 
@@ -289,8 +286,13 @@ app.get('/tokenpresent',(req,res)=>{
 //     }
 
 // })
-
+const forgetpassword=require('./Controllers/forgetpassword.js');
+const VerifyToken=require('./Controllers/VerifyToken.js');
+const resetPassword=require('./Controllers/resetPassword.js');
 app.post("/sendotp", otpController.sendOTP);
+app.post("/forgetpassword",forgetpassword.forgetpassword);
+app.post("/verifytoken",VerifyToken.VerifyToken);
+app.put("/resetpassword",resetPassword.resetPassword);
 
 // new signup
 app.post("/register", async (req, res) => {
