@@ -99,23 +99,24 @@ async function getUserDataFromRequest(req) {
 }
 // new message fetch
 app.get('/messages/:userId', async (req, res) => {
-    try{
+    try {
 
         const { userId } = req.params;
         console.log("userId: ", userId);
         const userData = await getUserDataFromRequest(req);
-        // console.log(userData);
-        const ourUserId = userData.id;
-        const messages = await Message.find({
-        sender: { $in: [userId, ourUserId] },
-        recipient: { $in: [userId, ourUserId] },
-    }).sort({ createdAt: 1 });
 
-    const userInfo=await User.find({_id:userId});
-    
-    res.json({data:messages,info:userInfo});
-    }catch(err){
-        return res.status(401).json({msg:"error occur"})      
+        const ourUserId = userData.id;
+        console.log("ourUserId : ", ourUserId);
+        const messages = await Message.find({
+            sender: { $in: [userId, ourUserId] },
+            recipient: { $in: [userId, ourUserId] },
+        }).sort({ createdAt: 1 });
+
+        const userInfo = await User.find({ _id: userId });
+
+        res.json({ data: messages, info: userInfo });
+    } catch (err) {
+        return res.status(401).json({ msg: "error occur" })
     }
 });
 
@@ -186,7 +187,7 @@ app.post('/login', async (req, res) => {
         if (foundUser) {
 
             const passOk = bcrypt.compareSync(password, foundUser.password);
-            if (passOk) { 
+            if (passOk) {
 
                 const payload = {
                     email: foundUser.email,
@@ -201,7 +202,7 @@ app.post('/login', async (req, res) => {
                 //     sameSite: "none",
                 //     secure: true,
                 // }
-                const options = {  
+                const options = {
                     httpOnly: true,
                     sameSite: "none",
                     secure: true,
@@ -231,9 +232,9 @@ app.post('/login', async (req, res) => {
 
 app.post('/logout', (req, res) => {
     console.log("I am in logout");
-    res.cookie('token', '', { 
-        sameSite: 'none', 
-        secure: true, 
+    res.cookie('token', '', {
+        sameSite: 'none',
+        secure: true,
         expires: new Date(0) // Set the expiration date to a past date
     });
     return res.json('ok');
@@ -241,15 +242,15 @@ app.post('/logout', (req, res) => {
 
 const sendMail = require('./connection/sendMail.js');
 
-app.get('/tokenpresent',(req,res)=>{
-    try{
+app.get('/tokenpresent', (req, res) => {
+    try {
         console.log("i am in token")
-        const cookie=req.cookies?.token;
-        if(cookie){
-            return res.status(200).json({success:true,cookie:cookie});
+        const cookie = req.cookies?.token;
+        if (cookie) {
+            return res.status(200).json({ success: true, cookie: cookie });
         }
-    }catch(err){
-        return res.status(401).json({success:false});
+    } catch (err) {
+        return res.status(401).json({ success: false });
     }
 })
 
@@ -286,13 +287,13 @@ app.get('/tokenpresent',(req,res)=>{
 //     }
 
 // })
-const forgetpassword=require('./Controllers/forgetpassword.js');
-const VerifyToken=require('./Controllers/VerifyToken.js');
-const resetPassword=require('./Controllers/resetPassword.js');
+const forgetpassword = require('./Controllers/forgetpassword.js');
+const VerifyToken = require('./Controllers/VerifyToken.js');
+const resetPassword = require('./Controllers/resetPassword.js');
 app.post("/sendotp", otpController.sendOTP);
-app.post("/forgetpassword",forgetpassword.forgetpassword);
-app.post("/verifytoken",VerifyToken.VerifyToken);
-app.put("/resetpassword",resetPassword.resetPassword);
+app.post("/forgetpassword", forgetpassword.forgetpassword);
+app.post("/verifytoken", VerifyToken.VerifyToken);
+app.put("/resetpassword", resetPassword.resetPassword);
 
 // new signup
 app.post("/register", async (req, res) => {
@@ -307,7 +308,7 @@ app.post("/register", async (req, res) => {
                 success: false,
                 message: 'All fields are required',
             });
-        } 
+        }
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -355,17 +356,24 @@ app.post("/register", async (req, res) => {
 const PORT = process.env.PORT || 4040
 console.log("Port: ", PORT)
 const server = app.listen(PORT);
+// console.log("server :: ",server);
 
 
 
 const wss = new ws.WebSocketServer({ server });
+
+// console.log("server  wss:: ",wss);
 wss.on('connection', (connection, req) => {
 
     function notifyAboutOnlinePeople() {
         [...wss.clients].forEach(client => {
             client.send(JSON.stringify({
                 online: [...wss.clients]
-                    .map(c => ({ userId: c.userId, username: c.username })),
+                    .map(c => ({ 
+                        userId: c.userId, 
+                        username: c.username,
+                        isTyping: c.isTyping || false
+                    })),
             }));
         }
         )
@@ -395,11 +403,12 @@ wss.on('connection', (connection, req) => {
 
     // console.log("localStorage : ",loginUser)
     const cookies = req.headers.cookie;
-    // const cookies = JSON.parse(loginUser);
+    // const cookies = JSON.parse(loginUser); 
     // console.log("storage: ", cookies);
 
-
+    
     if (cookies) {
+        
         const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
 
         if (tokenCookieString) {
@@ -409,7 +418,7 @@ wss.on('connection', (connection, req) => {
                     if (err) throw err;
                     // console.log("cookies is here: ",token);
                     const { id, username } = UserData;
-                    // console.log("User data userId : ",id);
+                    console.log("User data userId : ", id);
                     // console.log("User data username : ",username);
 
                     try {
@@ -433,8 +442,30 @@ wss.on('connection', (connection, req) => {
     // Handle All Messages through this funtion
     connection.on('message', async (message) => {
         const messageData = JSON.parse(message.toString());
-        const { recipient, text, file } = messageData;
+        const { recipient, text, file, type } = messageData;
+        console.log("messageData : ", messageData);
+        console.log("type : ", type);
+        
+        // Handle typing indicators
+        // Handle typing indicators
+if (type === 'typing') { 
+    console.log("Typing event received:", messageData);
+    
+    // Broadcast typing indicator to the recipient
+    [...wss.clients]
+        .filter(c => c.userId === recipient)
+        .forEach(c => {
+            console.log(`Forwarding typing event from ${connection.userId} to ${recipient}`);
+            c.send(JSON.stringify({
+                sender: connection.userId,
+                typing: messageData.typing // Use 'typing' instead of 'isTyping'
+            }));
+        });
+    
+        return;
+    }
 
+        // Handle regular messages
         let filename = null;
         if (file) {
             const parts = file.name.split('.');
@@ -442,11 +473,13 @@ wss.on('connection', (connection, req) => {
             filename = Date.now() + '.' + ext;
             const path = __dirname + "/uploads/" + file.name;
             const bufferData = new Buffer(file.data.split(',')[1], 'base64');
-            
+
             // console.log("path : ",path);
             fs.writeFile(path, bufferData, () => {
             })
         }
+
+        console.log("connection.userId :: ", connection.userId);
 
         if (recipient && (text || file)) {
             const MessageDoc = await Message.create({
@@ -456,7 +489,7 @@ wss.on('connection', (connection, req) => {
                 file: file ? file.name : null,
             });
 
-            console.log("file present: ",file);
+            console.log("file present: ", file);
 
             [...wss.clients]
                 .filter(c => c.userId === recipient)
